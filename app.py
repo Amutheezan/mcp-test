@@ -15,6 +15,34 @@ from google.genai import types
 
 load_dotenv()
 
+FALLBACK_MODELS = [
+    "gemini-flash-latest",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-3.5-flash-lite",
+]
+
+
+def flatten_exception(exc: BaseException) -> str:
+    """Unwrap ExceptionGroup/TaskGroup wrappers to find the real error message."""
+    if isinstance(exc, BaseExceptionGroup):
+        for sub in exc.exceptions:
+            return flatten_exception(sub)
+    return str(exc)
+
+
+def generate_with_fallback(client, contents, config):
+    """Try models in order, falling back to the next on any error (quota, retired model, etc)."""
+    last_error = None
+    for model in FALLBACK_MODELS:
+        try:
+            return client.models.generate_content(model=model, contents=contents, config=config), model
+        except Exception as e:
+            last_error = e
+            continue
+    raise RuntimeError(f"all fallback models failed: {flatten_exception(last_error)}")
+
 st.set_page_config(page_title="MCP Agent", page_icon="🛰️")
 st.title("MCP Agent")
 st.caption("Weather, math, conference deadlines, arXiv paper search — via Gemini + MCP tools.")
@@ -48,11 +76,9 @@ async def run_turn(prompt: str, history: list[types.Content]) -> tuple[str, list
             contents = history + [types.Content(role="user", parts=[types.Part(text=prompt)])]
 
             while True:
-                response = client.models.generate_content(
-                    model="gemini-flash-latest",
-                    contents=contents,
-                    config=config,
-                )
+                response, used_model = generate_with_fallback(client, contents, config)
+                if used_model != FALLBACK_MODELS[0]:
+                    tool_log.append({"name": "_fallback", "args": {}, "result": f"switched to {used_model}"})
                 part = response.candidates[0].content.parts[0]
                 contents.append(response.candidates[0].content)
 
@@ -104,7 +130,7 @@ if prompt := st.chat_input("Ask about conferences, papers, weather, math..."):
                     run_turn(prompt, st.session_state.history)
                 )
             except Exception as e:
-                text, tool_log, new_history = f"Error: {e}", [], st.session_state.history
+                text, tool_log, new_history = f"Error: {flatten_exception(e)}", [], st.session_state.history
         st.markdown(text)
         for call in tool_log:
             with st.expander(f"🔧 {call['name']}({call['args']})"):
