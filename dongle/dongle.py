@@ -56,23 +56,16 @@ DEFAULTS = {
 }
 
 SPRITE_DIR = Path(__file__).resolve().parent / "sprites"
-ACTIVITIES = (  # (menu label, state name, sprite file)
-    ("Jogging", "jog", "g_jog"),
-    ("City walk", "walk", "g_walk"),
-    ("Sprint", "run", "g_run"),
-    ("Push-ups", "pushup", "g_pushup"),
-    ("Coding", "laptop", "g_laptop"),
-    ("Movie night", "movie", "g_movie"),
-    ("Writing", "write", "g_write"),
-    ("Jogging (alt)", "jog2", "c_jog"),
-    ("City walk (alt)", "walk2", "c_walk"),
-    ("Sprint (alt)", "run2", "c_run"),
-    ("Push-ups (alt)", "pushup2", "c_pushup"),
-    ("Coding (alt)", "laptop2", "c_laptop"),
-    ("Movie night (alt)", "movie2", "c_movie"),
-    ("Writing (alt)", "write2", "c_write"),
+ACTIVITIES = (  # (menu label, state name, sprite file) - sprites cut from assets/character_sheet.png
+    ("Jogging", "jog", "s_jog"),
+    ("City walk", "walk", "s_walk"),
+    ("Sprint", "run", "s_run"),
+    ("Push-ups", "pushup", "s_pushup"),
+    ("Coding", "laptop", "s_laptop"),
+    ("Movie night", "movie", "s_movie"),
+    ("Writing", "write", "s_write"),
 )
-SLEEP_SPRITE = "g_sleep"
+SLEEP_SPRITE = "s_sleep"
 
 
 def load_config():
