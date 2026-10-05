@@ -1,0 +1,26 @@
+Reference photo: input_photos/<your_photo>.jpg (attach this image alongside the prompt)
+Keep the man's face, beard, hairstyle and likeness from the reference photo in every panel.
+
+Create ONE character sheet PNG in a clean, vibrant anime style (crisp cel-shaded linework, expressive eyes,
+soft shading, slightly chibi proportions), showing the same character doing 8 different activities.
+
+Background: pure solid white (#FFFFFF) everywhere - the whole sheet and every panel.
+No gradients, no scenery, no floor textures, no cast shadows beyond a very faint soft shadow under the feet.
+Each character is isolated on white so it can be cut out easily; props only where needed (mat, laptop, sofa, etc.).
+
+Layout: 4 columns x 2 rows, evenly spaced, no panel borders, no cards, no frames.
+Each character fully visible, same scale and similar height, with a small plain black title under it.
+Size: 2048x1024, output format PNG.
+
+Poses (expressive, with a little motion cue like a speed line or sweat drop, but nothing that colors the background):
+1. MORNING JOG - gray hoodie and joggers, relaxed smile, mid-stride.
+2. CITY WALK - blue plaid shirt and jeans, headphones on, casual stride.
+3. SPRINT - red tank top, black shorts, blue running shoes, fierce focus, full-speed pose.
+4. PUSH-UPS - gray tee, dark pants, on a plain blue mat, determined grin.
+5. CODING - plaid shirt, typing on a laptop at a small white desk, mug beside it, sleepy-but-happy eyes.
+6. MOVIE NIGHT - sitting on a simple white sofa, holding a red-and-white striped popcorn bucket, wide-eyed excitement.
+7. WRITING - seated at a small desk, writing in a notebook, thoughtful look.
+8. SLEEPING - cozy hoodie, hugging a pillow, small "z z z" letters.
+
+Avoid: colored or patterned backgrounds, scenery, borders, realistic photo style, extra fingers,
+distorted hands or faces, watermarks, logos, long text.

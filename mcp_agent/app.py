@@ -1,10 +1,11 @@
 """Streamlit chat UI on top of the MCP server, driven by Gemini.
 
-Run: streamlit run app.py
+Run: streamlit run mcp_agent/app.py
 """
 import asyncio
 import os
 import sys
+from pathlib import Path
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -54,9 +55,9 @@ def generate_with_fallback(client, contents, config, candidate_models: list[str]
             continue
     raise RuntimeError(f"all fallback models failed: {flatten_exception(last_error)}")
 
-st.set_page_config(page_title="MCP Agent", page_icon="🛰️")
-st.title("MCP Agent")
-st.caption("Weather, math, conference deadlines, arXiv paper search — via Gemini + MCP tools.")
+st.set_page_config(page_title="Amutheezan Assistant", page_icon="🛰️")
+st.title("Amutheezan Assistant")
+st.caption("AI and Security Research")
 
 
 def mcp_tools_to_gemini(mcp_tools) -> types.Tool:
@@ -78,10 +79,11 @@ async def run_turn(
     candidate_models: list[str],
     interests: list[str],
     memory: str,
+    recent_searches: list[str],
 ) -> tuple[str, list[dict], list, str]:
     """Send prompt through Gemini + MCP tool loop, return (final_text, tool_calls_log, history, model_used)."""
     client = genai.Client(api_key=api_key)
-    server_params = StdioServerParameters(command=sys.executable, args=["server.py"])
+    server_params = StdioServerParameters(command=sys.executable, args=[str(Path(__file__).resolve().parent / "server.py")])
     tool_log = []
 
     context_lines = []
@@ -89,6 +91,8 @@ async def run_turn(
         context_lines.append("User interests: " + ", ".join(interests))
     if memory.strip():
         context_lines.append("Notes to remember about the user: " + memory.strip())
+    if recent_searches:
+        context_lines.append("User's recent search history (most recent first): " + " | ".join(recent_searches))
     system_prefix = "\n".join(context_lines)
 
     async with stdio_client(server_params) as (read, write):
@@ -228,6 +232,7 @@ if prompt := st.chat_input("Ask about conferences ..."):
                             candidate_models,
                             [it["text"] for it in storage.list_interests()],
                             storage.get_memory(),
+                            [row["query"] for row in storage.list_search_history(limit=10)],
                         )
                     )
                 except Exception as e:

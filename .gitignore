@@ -3,3 +3,10 @@
 __pycache__/
 *.pyc
 mcp_agent.db
+
+# local / personal
+input_photos/
+.claude/
+.agents/
+.idea/workspace.xml
+*.db
