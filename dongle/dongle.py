@@ -57,21 +57,22 @@ DEFAULTS = {
 
 SPRITE_DIR = Path(__file__).resolve().parent / "sprites"
 ACTIVITIES = (  # (menu label, state name, sprite file)
-    ("Jogging", "jog", "jog"),
-    ("Walking", "walk", "walk"),
-    ("Running", "run", "run"),
-    ("Push-ups", "pushup", "pushup"),
-    ("Working on laptop", "laptop", "laptop"),
-    ("Watching movie", "movie", "movie"),
-    ("Jogging (anime)", "jog2", "c_jog"),
-    ("City walk (anime)", "walk2", "c_walk"),
-    ("Sprint (anime)", "run2", "c_run"),
-    ("Push-ups (anime)", "pushup2", "c_pushup"),
-    ("Coding (anime)", "laptop2", "c_laptop"),
-    ("Movie night (anime)", "movie2", "c_movie"),
-    ("Writing (anime)", "write2", "c_write"),
+    ("Jogging", "jog", "g_jog"),
+    ("City walk", "walk", "g_walk"),
+    ("Sprint", "run", "g_run"),
+    ("Push-ups", "pushup", "g_pushup"),
+    ("Coding", "laptop", "g_laptop"),
+    ("Movie night", "movie", "g_movie"),
+    ("Writing", "write", "g_write"),
+    ("Jogging (alt)", "jog2", "c_jog"),
+    ("City walk (alt)", "walk2", "c_walk"),
+    ("Sprint (alt)", "run2", "c_run"),
+    ("Push-ups (alt)", "pushup2", "c_pushup"),
+    ("Coding (alt)", "laptop2", "c_laptop"),
+    ("Movie night (alt)", "movie2", "c_movie"),
+    ("Writing (alt)", "write2", "c_write"),
 )
-SLEEP_SPRITE = "c_sleep"
+SLEEP_SPRITE = "g_sleep"
 
 
 def load_config():
@@ -160,6 +161,7 @@ class Dongle(QWidget):
         "pushup": 7.0,
         "laptop": 10.0,
         "movie": 10.0,
+        "write": 10.0,
         "jog2": 8.0,
         "walk2": 8.0,
         "run2": 6.0,
