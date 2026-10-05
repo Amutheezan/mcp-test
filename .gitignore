@@ -10,3 +10,8 @@ input_photos/
 .agents/
 .idea/workspace.xml
 *.db
+
+# build output
+build/
+dist/
+*.spec

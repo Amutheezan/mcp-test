@@ -55,7 +55,8 @@ DEFAULTS = {
     "sprites": False,  # use the images in sprites/ instead of the drawn character
 }
 
-SPRITE_DIR = Path(__file__).resolve().parent / "sprites"
+_BASE = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))  # _MEIPASS: PyInstaller bundle
+SPRITE_DIR = _BASE / "sprites"
 N_FRAMES = 9  # sprites/f_0.png .. f_8.png, cut from assets/sheet.png
 FRAME_ANIMS = {  # state -> (frame indices, frames per second)
     "idle": ([0], 1),
