@@ -52,20 +52,21 @@ DEFAULTS = {
     "glasses": True,
     "beard": False,
     "photo": "",  # optional path to a face photo
-    "sprites": False,  # use the full-body Gemini images in sprites/ when present
+    "sprites": False,  # use the images in sprites/ instead of the drawn character
 }
 
 SPRITE_DIR = Path(__file__).resolve().parent / "sprites"
-ACTIVITIES = (  # (menu label, state name, sprite file) - sprites cut from assets/character_sheet.png
-    ("Jogging", "jog", "s_jog"),
-    ("City walk", "walk", "s_walk"),
-    ("Sprint", "run", "s_run"),
-    ("Push-ups", "pushup", "s_pushup"),
-    ("Coding", "laptop", "s_laptop"),
-    ("Movie night", "movie", "s_movie"),
-    ("Writing", "write", "s_write"),
-)
-SLEEP_SPRITE = "s_sleep"
+N_FRAMES = 9  # sprites/f_0.png .. f_8.png, cut from assets/sheet.png
+FRAME_ANIMS = {  # state -> (frame indices, frames per second)
+    "idle": ([0], 1),
+    "swing": ([0], 1),
+    "wave": ([1, 2], 4),
+    "dance": ([2, 3, 6, 7], 5),
+    "laugh": ([6, 7], 6),
+    "spin": ([0, 4, 5, 4], 5),
+    "surprised": ([3], 1),
+    "sleep": ([8], 1),
+}
 
 
 def load_config():
@@ -148,22 +149,7 @@ class Dongle(QWidget):
         "spin": 1.8,
         "laugh": 2.4,
         "swing": 3.2,
-        "jog": 8.0,
-        "walk": 8.0,
-        "run": 6.0,
-        "pushup": 7.0,
-        "laptop": 10.0,
-        "movie": 10.0,
-        "write": 10.0,
-        "jog2": 8.0,
-        "walk2": 8.0,
-        "run2": 6.0,
-        "pushup2": 7.0,
-        "laptop2": 10.0,
-        "movie2": 10.0,
-        "write2": 10.0,
     }
-    SPRITE_H = 250
     AUTO_CHOICES = ["wave", "dance", "laugh", "swing", "spin"]
 
     def __init__(self, cfg):
@@ -171,7 +157,7 @@ class Dongle(QWidget):
         self.cfg = cfg
         self.photo = None
         self.load_photo()
-        self.sprites = {}
+        self.frames = []
         self.load_sprites()
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
@@ -215,46 +201,27 @@ class Dongle(QWidget):
                 )
 
     def load_sprites(self):
-        self.sprites = {}
-        files = [(name, fname) for _label, name, fname in ACTIVITIES]
-        files.append(("sleep", SLEEP_SPRITE))
-        for name, fname in files:
-            pm = QPixmap(str(SPRITE_DIR / f"{fname}.png"))
-            if not pm.isNull():
-                self.sprites[name] = pm.scaled(
-                    260, self.SPRITE_H, Qt.KeepAspectRatio, Qt.SmoothTransformation
-                )
+        """Load frames; keep the x of the string at the top so we can swing about it."""
+        self.frames = []
+        for k in range(N_FRAMES):
+            pm = QPixmap(str(SPRITE_DIR / f"f_{k}.png"))
+            if pm.isNull():
+                self.frames = []
+                return
+            img = pm.toImage()
+            xs = [x for x in range(img.width()) for y in range(3)
+                  if QColor(img.pixel(x, y)).alpha() > 128]
+            self.frames.append((pm, sum(xs) / len(xs) if xs else img.width() / 2))
 
     def sprite_mode(self):
-        return bool(self.cfg.get("sprites")) and "walk" in self.sprites
-
-    def auto_choices(self):
-        if self.sprite_mode():
-            return [n for _l, n, _f in ACTIVITIES if n in self.sprites]
-        return self.AUTO_CHOICES
+        return bool(self.cfg.get("sprites")) and bool(self.frames)
 
     def draw_sprite(self, p):
-        t = self.state_t if self.state != "idle" else self.clock
-        name = self.state if self.state in self.sprites else "walk"
-        kind = name.rstrip("2")
-        bob, rot, scale = 0.0, 0.0, 1.0
-        if kind == "jog":
-            bob, rot = abs(math.sin(t * 9)) * 8, math.sin(t * 4.5) * 2
-        elif kind == "walk" and self.state != "idle":
-            bob, rot = abs(math.sin(t * 6)) * 5, math.sin(t * 3) * 1.5
-        elif kind == "run":
-            bob, rot = abs(math.sin(t * 12)) * 12, math.sin(t * 6) * 3
-        elif kind == "pushup":
-            bob = -(1 - math.cos(t * 4)) / 2 * 18
-        elif kind == "sleep":
-            scale = 1 + 0.02 * math.sin(self.clock * 1.2)
-        else:
-            scale = 1 + 0.012 * math.sin(self.clock * 2)
-        pm = self.sprites[name]
-        p.translate(self.ANCHOR_X, self.HEIGHT - 6)
-        p.rotate(rot)
-        p.scale(scale, scale)
-        p.drawPixmap(QPointF(-pm.width() / 2, -pm.height() - bob), pm)
+        seq, fps = FRAME_ANIMS.get(self.state, FRAME_ANIMS["idle"])
+        pm, ax = self.frames[seq[int(self.state_t * fps) % len(seq)]]
+        p.translate(self.ANCHOR_X, 0)
+        p.rotate(math.degrees(self.theta))
+        p.drawPixmap(QPointF(-ax, 0), pm)
 
     # ------------------------------------------------------------ state machine
     def set_state(self, name, user=False):
@@ -292,7 +259,7 @@ class Dongle(QWidget):
             if self.clock - self.last_active > 90:
                 self.set_state("sleep")
             elif self.clock >= self.next_auto:
-                self.set_state(random.choice(self.auto_choices()))
+                self.set_state(random.choice(self.AUTO_CHOICES))
                 self.next_auto = self.clock + random.uniform(20, 45)
 
         if self.state != "sleep" and self.clock >= self.next_breeze:
@@ -661,10 +628,7 @@ class Dongle(QWidget):
 
     def mouseReleaseEvent(self, e):
         if e.button() == Qt.LeftButton and not self.moved:
-            if self.sprite_mode():
-                self.user_trigger(random.choice(self.auto_choices()))
-            else:
-                self.user_trigger(random.choice(["wave", "spin", "laugh", "swing"]))
+            self.user_trigger(random.choice(["wave", "spin", "laugh", "swing"]))
         self.drag_last = None
 
     def mouseDoubleClickEvent(self, e):
@@ -677,13 +641,8 @@ class Dongle(QWidget):
 
     def build_menu(self):
         menu = QMenu(self)
-        if self.sprites:
-            acts = menu.addMenu("Activities")
-            for label, name, _f in ACTIVITIES:
-                if name in self.sprites:
-                    acts.addAction(label).triggered.connect(
-                        lambda _=False, n=name: self.menu_anim(n))
-            body = menu.addAction("Use Gemini body")
+        if self.frames:
+            body = menu.addAction("Use image sprites")
             body.setCheckable(True)
             body.setChecked(bool(self.cfg.get("sprites")))
             body.triggered.connect(lambda v: self.set_option("sprites", bool(v)))
