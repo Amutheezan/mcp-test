@@ -707,6 +707,8 @@ class Dongle(QWidget):
 
     def set_option(self, key, value):
         self.cfg[key] = value
+        if key != "sprites":  # customizing only shows on the drawn character
+            self.cfg["sprites"] = False
         save_config(self.cfg)
         self.update()
 
@@ -716,6 +718,7 @@ class Dongle(QWidget):
             "Images (*.png *.jpg *.jpeg *.bmp *.webp)")
         if path:
             self.cfg["photo"] = path
+            self.cfg["sprites"] = False
             save_config(self.cfg)
             self.load_photo()
             self.update()
